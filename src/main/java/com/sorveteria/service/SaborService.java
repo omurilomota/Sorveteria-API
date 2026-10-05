@@ -1,22 +1,20 @@
 package com.sorveteria.service;
 
-import com.sorveteria.model.Sabor;
-import com.sorveteria.repository.SaborRepository;
-
+import com.sorveteria.dto.SaborRequest;
+import com.sorveteria.dto.SaborResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
-public class SaborService {
-    private final SaborRepository repository;
 
-    public SaborService(SaborRepository repository) {
-        this.repository = repository;
-    }
+public interface SaborService {
+    Page<SaborResponse> listarTodos(Pageable pageable);
+    List<SaborResponse> listarAtivos();
+    SaborResponse buscarPorId(Long id);
 
-    public List<Sabor> listar() {
-        return repository.findAll();
-    }
+    SaborResponse criar(SaborRequest dto);
+    SaborResponse atualizar(Long id, SaborRequest dto);
 
-    public Sabor salvar(Sabor sabor) {
-        return repository.save(sabor);
-    }
+    void alterarStatus(Long id, boolean ativo);
+    void deletar(Long id);
 }

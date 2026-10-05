@@ -19,7 +19,6 @@ public class Sabor {
     private Long id;
 
     private String nome;
-    private BigDecimal preco;
     private boolean ativo;
 
 
