@@ -1,23 +1,31 @@
 package com.sorveteria.dto;
 
 import com.sorveteria.model.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
+
+@Component
+@RequiredArgsConstructor
 public class UserMapper {
+
+    private final PasswordEncoder passwordEncoder;
 
     public static UserResponse toResponse(User user) {
         return new UserResponse(
             user.getId(),
             user.getNome(),
             user.getEmail(),
-            user.getTelefone()
+                user.getCpf()
         );
     }
 
-    public static User toEntity(UserRequest req) {
+    public User toEntity(UserRequest req) {
         User user = new User();
         user.setNome(req.nome());
         user.setEmail(req.email());
-        user.setSenhaHash(req.senha());
+        user.setSenhaHash(passwordEncoder.encode(req.senha()));
         user.setTelefone(req.telefone());
         user.setCpf(req.cpf());
         user.setDataNascimento(req.dataNascimento());

@@ -1,5 +1,6 @@
 package com.sorveteria.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,24 +17,22 @@ import com.sorveteria.model.User;
 
 @RestController
 @RequestMapping("/usuarios")
+@RequiredArgsConstructor
 public class UserController {
 	
 	private final UserService service;
-	
-	public UserController(UserService service){
-		this.service = service;
-	}
-	
+	private final UserMapper mapper;
+
 	@GetMapping("/{id}")
-	public User buscarPorId(@PathVariable Long id) {
-		return service.buscarPorId(id);
+	public UserResponse buscarPorId(@PathVariable Long id) {
+		return mapper.toResponse(service.buscarPorId(id));
 	}
 
     @PostMapping
     public UserResponse criar(@Valid @RequestBody UserRequest request) {
-        User user = UserMapper.toEntity(request);
+        User user = mapper.toEntity(request);
         User salvo = service.salvar(user);
-        return UserMapper.toResponse(salvo);
+        return mapper.toResponse(salvo);
     }
     
 	
