@@ -1,10 +1,10 @@
 package com.sorveteria.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.sorveteria.dto.PedidoResponse;
+import org.apache.coyote.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import com.sorveteria.model.Pedido;
 import com.sorveteria.service.PedidoService;
@@ -21,13 +21,24 @@ public class PedidoController {
 	{
 		this.service = service;
 	}
-	
+
 	@GetMapping
-	public List<Pedido> listar() {
-		return service.listar();
+	// ResponseEntity é uma classe do Spring que representa toda a resposta HTTP enviada pelo servidor, permitindo que você controle:
+	public ResponseEntity<List<Pedido>> listar() {
+		List<Pedido> pedidos = service.listar();
+		if (pedidos.isEmpty()) {
+			return ResponseEntity.noContent().build(); // 204
+		}
+		return ResponseEntity.ok(pedidos); //200
+	}
+
+	@GetMapping("/{id}")
+	public ResponseEntity<PedidoResponse> buscarPorId(@PathVariable Long id) {
+		return ResponseEntity.ok(service.buscarPorId(id));
 	}
 	
 	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
 	public Pedido criar(@RequestBody Pedido pedido) {
 		return service.salvar(pedido);
 	}

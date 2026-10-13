@@ -17,7 +17,7 @@ public class UserMapper {
             user.getId(),
             user.getNome(),
             user.getEmail(),
-                user.getCpf()
+            user.getCpf().replaceAll("(\\d{3})\\d{3}\\d{3}(\\d{2})", "$1.***.***-$2")
         );
     }
 
