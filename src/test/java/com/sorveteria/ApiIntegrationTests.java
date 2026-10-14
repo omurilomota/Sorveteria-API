@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +21,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Testes de integração dos endpoints: sobem o contexto completo do Spring e
  * exercitam a pilha inteira (controller → service → repository → banco).
  *
+ * O banco é um PostgreSQL real, criado pelo Testcontainers e descartado no final
+ * (ver {@link PostgresIntegrationTest}). Isso tem um efeito colateral valioso: a
+ * cada execução o Flyway aplica a migração de verdade, e o {@code ddl-auto=validate}
+ * confere se as entidades batem com as tabelas que a migração criou. Se você
+ * editar a migração errado, o teste quebra.
+ *
  * Cada teste roda dentro de uma transação que é revertida no final, então eles
  * não dependem de ordem de execução.
  */
-@SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("API REST — testes de integração")
-class ApiIntegrationTests {
+class ApiIntegrationTests extends PostgresIntegrationTest {
 
     private static final long ID_INEXISTENTE = 999_999L;
 
