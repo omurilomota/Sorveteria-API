@@ -55,6 +55,8 @@ public class PedidoService {
 		Pedido pedido = new Pedido();
 		pedido.setNome(dto.nome());
 		pedido.setStatus(StatusPedido.PENDENTE);
+		pedido.setCustoTotal(BigDecimal.ZERO);
+		pedido.setItensTotal(0);
 		return PedidoMapper.toResponse(repository.save(pedido));
 	}
 

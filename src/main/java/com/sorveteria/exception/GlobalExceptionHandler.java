@@ -60,10 +60,16 @@ public class GlobalExceptionHandler {
 				"mensagem", e.getMessage(), "timestamp", LocalDateTime.now()));
 	}
 
+	@ExceptionHandler(UsuarioNaoEncontradoException.class)
+	public ResponseEntity<Map<String, Object>> handleUsuarioNaoEncontrado(UsuarioNaoEncontradoException e) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", 404, "erro", "Não encontrado",
+				"mensagem", e.getMessage(), "timestamp", LocalDateTime.now()));
+	}
+
 	@ExceptionHandler(ItemInvalidoException.class)
 	public ResponseEntity<Map<String, Object>> handleItemInvalido(ItemInvalidoException e) {
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("status", 409, "erro", "Operação inválida",
-				"mensagem", e.getMessage(), "timesstamp", LocalDateTime.now()));
+				"mensagem", e.getMessage(), "timestamp", LocalDateTime.now()));
 
 	}
 

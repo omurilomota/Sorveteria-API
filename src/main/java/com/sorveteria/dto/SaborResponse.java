@@ -4,7 +4,7 @@ import com.sorveteria.model.Sabor;
 
 public record SaborResponse (
 
-    Long Id,
+    Long id,
     String nome,
     Boolean ativo
 
