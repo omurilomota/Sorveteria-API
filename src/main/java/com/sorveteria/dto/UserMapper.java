@@ -12,7 +12,7 @@ public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
 
-    public static UserResponse toResponse(User user) {
+    public UserResponse toResponse(User user) {
         return new UserResponse(
             user.getId(),
             user.getNome(),

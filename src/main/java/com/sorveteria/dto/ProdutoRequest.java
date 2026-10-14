@@ -11,9 +11,4 @@ public record ProdutoRequest (
     @NotBlank String descricao,
     @NotNull @Positive int estoque,
     @NotBlank String categoria
-) {
-
-    public Object getQuantidade() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getQuantidade'");
-    }}
+) {}

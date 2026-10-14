@@ -1,9 +1,8 @@
 package com.sorveteria.dto;
 
-import java.util.List;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 
 public record PedidoRequest(
-        @NotEmpty List<@Valid ItemPedidoRequest> itens
+		@NotBlank(message = "O nome do pedido é obrigatório")
+		String nome
 ) {}
