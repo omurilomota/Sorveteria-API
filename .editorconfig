@@ -1,0 +1,36 @@
+# EditorConfig — https://editorconfig.org
+#
+# Por que este arquivo existe:
+# as três IDEs usadas neste projeto (IntelliJ, VS Code e Spring Tools/Eclipse)
+# têm, cada uma, o SEU próprio conjunto de preferências de formatação — guardadas
+# em lugares diferentes e que não viajam com o repositório. Isso já causou, aqui,
+# um IntelliJ analisando em Java 25 enquanto o pom compila em Java 21.
+#
+# O .editorconfig resolve a parte de formatação: é lido nativamente pelo
+# IntelliJ, pelo Eclipse (via plugin) e pelo VS Code (via extensão, já instalada).
+# A regra passa a viajar com o código, em vez de morar na sua máquina.
+
+root = true
+
+# Padrão do projeto: Java usa 4 espaços (convenção da linguagem e do Maven).
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# YAML e JSON são lidos com 2 espaços por convenção.
+[*.{yml,yaml,json}]
+indent_size = 2
+
+# Markdown: NÃO remover espaço no fim da linha.
+# Dois espaços no fim de uma linha significam quebra de linha em Markdown,
+# então removê-los altera o documento renderizado.
+[*.md]
+trim_trailing_whitespace = false
+
+# Scripts de Windows exigem CRLF para funcionar.
+[*.{cmd,bat}]
+end_of_line = crlf
