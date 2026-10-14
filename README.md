@@ -5,6 +5,7 @@ clientes e registro de pedidos.
 
 Construído com **Java 21** e **Spring Boot 4.1.1**, com persistência em JPA/Hibernate.
 
+[![CI](https://github.com/omurilomota/Sorveteria-API/actions/workflows/ci.yml/badge.svg)](https://github.com/omurilomota/Sorveteria-API/actions/workflows/ci.yml)
 [![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot 4.1.1](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Maven](https://img.shields.io/badge/Maven-C71A1F?logo=apache-maven&logoColor=white)](https://maven.apache.org/)
@@ -49,20 +50,23 @@ composta apenas por `record`s de request e response.
 🚧 **Em desenvolvimento ativo.**
 
 A base arquitetural está completa — camada de DTOs, repositories, tratamento
-global de exceção e o CRUD de sabores. As próximas etapas são autenticação,
-migrações de banco e suíte de testes. Consulte o
-[ROADMAP](./ROADMAP.md) para o panorama completo e a ordem sugerida de
-implementação.
+global de exceção, os quatro controllers, o schema versionado com Flyway e uma
+suíte de 30 testes de integração rodando contra PostgreSQL de verdade. A etapa
+que falta é a autenticação. Consulte o [ROADMAP](./ROADMAP.md) para o panorama
+completo e a ordem sugerida de implementação.
+
+O guia para estudar o código, camada por camada, está em
+[GUIA-DE-ESTUDO.md](./GUIA-DE-ESTUDO.md).
 
 | Módulo | Estado |
 |---|---|
 | Sabor | ✅ CRUD completo com paginação |
-| Produto | ⚠️ Entidade e service prontos, controller pendente |
-| Usuário | ⚠️ Cadastro e busca por ID, autenticação pendente |
-| Pedido | ⚠️ CRUD básico, sem cálculo server-side de preço |
-| Segurança | 🚧 Estrutura iniciada, não funcional |
-| Banco | ⚠️ H2 em memória, sem versionamento de schema |
-| Testes | 🚧 Cobertura mínima |
+| Produto | ✅ CRUD completo, com controller |
+| Usuário | ⚠️ Cadastro e busca por ID; autenticação pendente |
+| Pedido | ✅ Itens, cálculo de total no servidor e transição de status validada |
+| Segurança | ⚠️ Spring Security ativo e senhas em BCrypt, mas **sem autenticação**: o filtro JWT é uma classe vazia e todos os endpoints estão liberados |
+| Banco | ✅ PostgreSQL, schema versionado por Flyway e `ddl-auto=validate` |
+| Testes | ✅ 30 testes, sendo 29 de integração contra PostgreSQL real |
 
 ---
 
@@ -74,9 +78,11 @@ implementação.
 | Spring Boot | 4.1.1 | Framework |
 | Spring Web MVC | — | Camada HTTP |
 | Spring Data JPA | — | Persistência |
-| Spring Security | — | Autenticação (em andamento) |
+| Spring Security | — | Segurança e hash de senha (autenticação pendente) |
 | Spring Validation | — | Validação de entrada |
-| H2 Database | — | Banco em memória (dev) |
+| PostgreSQL | 18 | Banco de dados |
+| Flyway | 12.x | Versionamento do schema |
+| Testcontainers | 2.x | PostgreSQL descartável nos testes |
 | Hibernate | 6.x | ORM |
 | Lombok | — | Redução de boilerplate |
 | JUnit 5 | — | Framework de testes |
@@ -109,18 +115,35 @@ Ou, se preferir via JAR:
 java -jar target/SorveteriaBackend-0.0.1-SNAPSHOT.jar
 ```
 
+### Banco de dados
+
+A aplicação usa PostgreSQL. Para rodar local, suba um com Docker:
+
+```bash
+docker run -d --name sorveteria-db \
+  -e POSTGRES_DB=sorveteria \
+  -e POSTGRES_USER=sorveteria \
+  -e POSTGRES_PASSWORD=sorveteria \
+  -p 5432:5432 postgres:18-alpine
+```
+
+O Flyway cria as tabelas sozinho na primeira subida da aplicação. Para conferir
+depois:
+
+```bash
+docker exec -it sorveteria-db psql -U sorveteria -d sorveteria -c '\dt'
+```
+
 ### Acessos
 
 | Serviço | URL |
 |---|---|
 | API | http://localhost:8081 |
-| Console H2 | http://localhost:8081/h2-console |
+| Documentação (Swagger UI) | http://localhost:8081/swagger-ui.html |
 
-Para o console H2, use a JDBC URL `jdbc:h2:mem:sorveteria`, usuário `sa` e
-senha em branco.
-
-> ⚠️ O banco é **em memória**: todo o dado é descartado a cada reinício. Isso é
-> proposital no estágio atual e será substituído por Postgres.
+Para apontar para outro banco, use as variáveis `DB_URL`, `DB_USER` e
+`DB_PASSWORD`. Os valores padrão (para desenvolvimento local) estão em
+`application.properties`.
 
 ---
 
@@ -131,29 +154,27 @@ Toda a configuração está em `src/main/resources/application.properties`:
 | Propriedade | Valor | Descrição |
 |---|---|---|
 | `server.port` | `8081` | Porta da aplicação |
-| `spring.datasource.url` | `jdbc:h2:mem:sorveteria` | Banco em memória |
-| `spring.datasource.username` | `sa` | Usuário do banco |
-| `spring.jpa.hibernate.ddl-auto` | `update` | Cria/atualiza schema no boot |
-| `spring.h2.console.enabled` | `true` | Habilita o console web |
-| `spring.h2.console.path` | `/h2-console` | Caminho do console |
+| `spring.datasource.url` | `jdbc:postgresql://localhost:5432/sorveteria` | Banco (aceita `DB_URL`) |
+| `spring.datasource.username` | `sorveteria` | Usuário (aceita `DB_USER`) |
+| `spring.datasource.password` | `sorveteria` | Senha (aceita `DB_PASSWORD`) |
+| `spring.jpa.hibernate.ddl-auto` | `validate` | Confere as entidades contra o schema; não altera nada |
+| `spring.flyway.enabled` | `true` | Aplica as migrações de `db/migration` |
 | `spring.jpa.show-sql` | `true` | Loga as queries |
 | `spring.jpa.properties.hibernate.format_sql` | `true` | SQL formatado nos logs |
 
-> ⚠️ `ddl-auto=update` e o console H2 são adequados apenas para
-> desenvolvimento. Ver [Problemas conhecidos](#problemas-conhecidos).
-
+> ⚠️ **Nunca edite uma migração que já foi aplicada.** O Flyway guarda um
+> checksum de cada arquivo: alterar um arquivo aplicado faz a próxima subida
+> falhar. Mudança nova é arquivo novo (`V2__...`, `V3__...`).
 ---
 
 ## Endpoints
 
 Base: `http://localhost:8081`
 
-> ⚠️ **No estado atual, todos os endpoints retornam `401 Unauthorized`.** O
-> `spring-boot-starter-security` está no classpath, mas o `SecurityConfig` ainda
-> não define uma cadeia de filtros, então o Spring aplica a configuração
-> padrão e bloqueia tudo. O motivo está detalhado em
-> [Problemas conhecidos](#problemas-conhecidos). Enquanto isso, remova o
-> starter de segurança do `pom.xml` para testar localmente.
+> ⚠️ **Todos os endpoints estão liberados, sem autenticação.** O `SecurityConfig`
+> define uma cadeia de filtros com `anyRequest().permitAll()`, e o
+> `JwtAuthenticationFilter` é uma classe vazia que ninguém referencia. Isso serve
+> apenas enquanto a autenticação não existe — não é configuração para produção.
 
 ### Sabores
 
@@ -447,60 +468,54 @@ public interface SaborRepository extends JpaRepository<Sabor, Long> {
 ## Testes
 
 ```bash
-# Executa a suíte
 ./mvnw test
-
-# Com relatório de cobertura
-./mvnw verify
 ```
 
-A suíte atual cobre apenas o carregamento do contexto de aplicação. A estratégia
-de testes — slices `@WebMvcTest`, `@DataJpaTest`, Testcontainers e limite de
-cobertura — está especificada no
-[ROADMAP](./ROADMAP.md#p3--testes).
+São 30 testes, quase todos de integração: sobem a aplicação inteira com
+`@SpringBootTest`, disparam requisições HTTP com `MockMvc` e conferem a resposta.
+
+O banco é um PostgreSQL real, criado na hora pelo Testcontainers e descartado no
+final, então **é preciso ter Docker rodando**. Isso é de propósito: teste contra
+banco em memória valida um banco que não é o seu.
+
+Cada teste roda dentro de uma transação revertida ao terminar, então não há
+dependência de ordem entre eles.
+
+Cobrem: os quatro controllers, os caminhos de erro (`404`, `400`, `409`), a
+máscara de CPF na resposta e a máquina de transição de status dos pedidos.
 
 ---
 
-## Problemas conhecidos
+## Limitações atuais
 
-A lista completa e priorizada está no [ROADMAP](./ROADMAP.md). Os pontos que
-afetam quem for usar a API agora:
+A lista completa e priorizada fica no [ROADMAP](./ROADMAP.md). Aqui estão apenas
+as que afetam quem for usar a API hoje.
 
-### 🔴 A API está bloqueada por configuração de segurança
+### ⚠️ Não há autenticação
 
-`SecurityConfig` não define nenhuma cadeia de filtros e `JwtAuthenticationFilter`
-está vazio. Com o starter de segurança no classpath, o Spring Boot aplica a
-política padrão e **todos os endpoints respondem `401`**.
+`SecurityConfig` libera todos os endpoints com `anyRequest().permitAll()`, e o
+`JwtAuthenticationFilter` é uma classe vazia. Quem alcançar a API pode ler e
+escrever. **Não exponha esta aplicação na internet enquanto isso não for
+implementado.**
 
-**Workaround para desenvolvimento local:** remova o bloco abaixo do `pom.xml`
-até a autenticação ser implementada.
+### ⚠️ As listagens não seguem o mesmo contrato
 
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-security</artifactId>
-</dependency>
-```
+`GET /sabores` devolve um `Page` do Spring (`content`, `pageable`,
+`totalElements`), enquanto `GET /produtos` e `GET /pedidos` devolvem um array
+puro. Os três deveriam responder no mesmo formato.
 
-### 🟠 Senha armazenada sem hash
+### ⚠️ CPF duplicado só é impedido no código Java
 
-`UserMapper.toEntity` grava a senha em texto puro. **Não use dados reais
-enquanto isso não for corrigido.**
+`UserService` verifica se o CPF já existe antes de salvar, mas não há constraint
+`UNIQUE` para `cpf` no banco. Duas requisições simultâneas podem passar pela
+verificação ao mesmo tempo e gravar duplicado. O e-mail tem constraint e não
+sofre disso.
 
-### 🟠 Pedido aceita preço do cliente
+### ⚠️ Colunas que aceitam nulo sem precisar
 
-`POST /pedidos` recebe a entidade `Pedido` diretamente, permitindo que o
-cliente envie `precoUnitario` arbitrário. **Não use em produção.**
-
-### 🟠 Dados voláteis
-
-Banco H2 em memória: tudo é perdido a cada reinício, e `ddl-auto=update` altera
-o schema silenciosamente. Em produção isso causaria perda de dados.
-
-### 🟡 Módulo de produtos inacessível
-
-`ProdutoService` está implementado, mas não há `ProdutoController`. O catálogo
-de produtos com preço e estoque não é acessível pela API.
+`users.nome` e `produto.categoria`, entre outras, são `varchar` sem `NOT NULL`,
+porque a entidade não declara `@Column(nullable = false)`. A validação de
+entrada cobre o caso normal, mas o banco aceitaria nulo.
 
 ---
 
